@@ -1,0 +1,82 @@
+{{define "void-orders"}}
+<div class="stack">
+
+  <section class="card no-print">
+    <div class="filters">
+      <label class="field">
+        <span>Kata Kunci :</span>
+        <input id="vq" type="search" placeholder="No. Transaksi, Nama, Sales, Kasir..." autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Toko :</span>
+        <select id="vdept">
+          <option value="">Semua Toko</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Tanggal Dari :</span>
+        <input id="vdari" type="date">
+      </label>
+      <label class="field">
+        <span>Tanggal Sampai :</span>
+        <input id="vsampai" type="date">
+      </label>
+    </div>
+    <div class="filter-foot">
+      <button class="btn btn-success" id="vsearch" type="button">{{template "icon" (dict "Name" "search")}} Cari</button>
+      <button class="btn btn-ghost" id="vreset" type="button">{{template "icon" (dict "Name" "refresh")}} Reset</button>
+      <span class="filter-note">Tekan <kbd>/</kbd> untuk fokus Kata Kunci, <kbd>Esc</kbd> untuk menutup dialog.</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="toolbar no-print">
+      <button class="btn btn-out" data-vpage="prev" type="button" aria-label="Sebelumnya">{{template "icon" (dict "Name" "chevron-left")}}</button>
+      <span class="pager">Hal <b id="vCurPage">1</b> / <b id="vTotPage">1</b></span>
+      <button class="btn btn-out" data-vpage="next" type="button" aria-label="Berikutnya">{{template "icon" (dict "Name" "chevron-right")}}</button>
+      <span class="spacer"></span>
+      <label class="perpage">
+        Baris
+        <select id="vPerPage">
+          <option>10</option>
+          <option>25</option>
+          <option>50</option>
+          <option value="999">Semua</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="tablewrap">
+      <table class="grid" id="voidTable">
+        <thead>
+          <tr>
+            <th>No Transaksi</th>
+            <th>Tanggal</th>
+            <th>Dept/Gudang</th>
+            <th>Nama</th>
+            <th>Sales</th>
+            <th class="right">Total</th>
+            <th>Alasan Void</th>
+            <th>Detail Barang</th>
+            <th>Keterangan</th>
+            <th>User Buat</th>
+          </tr>
+        </thead>
+        <tbody id="voidRows"></tbody>
+      </table>
+      <div class="nodata" id="vnodata">
+        {{template "icon" (dict "Name" "search")}}
+        <b>Tidak ada transaksi void</b>
+        <small>Ubah kata kunci atau rentang tanggal, lalu tekan Cari.</small>
+      </div>
+    </div>
+
+    <div class="tablefoot">
+      <span id="vCountInfo">&nbsp;</span>
+      <span class="spacer"></span>
+      <span>Total <b class="mono" id="vSumTotal">Rp 0</b></span>
+    </div>
+  </section>
+
+</div>
+{{end}}

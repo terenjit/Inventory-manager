@@ -1,0 +1,26 @@
+{{define "supplier-detail"}}
+<div class="stack supplier-detail-page">
+  <section class="card supplier-detail-heading">
+    <div><small class="eyebrow">MASTER DATA SUPPLIER</small><h2>{{if .SupplierName}}{{.SupplierName}}{{else}}Detail Supplier{{end}}</h2><p>Ringkasan pembayaran dan daftar nota supplier ini.</p></div>
+    <div class="supplier-detail-actions"><a class="btn btn-out" href="/daftar-supplier">Kembali ke Daftar Supplier</a><button class="btn btn-success" id="addSupplierInvoice" type="button">{{template "icon" (dict "Name" "plus")}} Tambah Nota</button></div>
+  </section>
+  <div id="supplierDetailInfo" data-supplier="{{.SupplierName}}" hidden></div>
+
+  {{if .SupplierName}}
+  <section class="cards supplier-detail-stats">
+    <article class="stat"><span class="s-ic purple">{{template "icon" (dict "Name" "receipt")}}</span><div><small>Total Nota</small><b class="mono">{{.SupplierBillCount}}</b><em>Semua nota supplier</em></div></article>
+    <article class="stat"><span class="s-ic amber">{{template "icon" (dict "Name" "wallet")}}</span><div><small>Belum Lunas</small><b class="mono">{{money .SupplierUnpaidTotal}}</b><em>{{.SupplierUnpaidCount}} nota</em></div></article>
+    <article class="stat"><span class="s-ic green">{{template "icon" (dict "Name" "check")}}</span><div><small>Sudah Lunas</small><b class="mono">{{money .SupplierPaidTotal}}</b><em>{{.SupplierPaidCount}} nota</em></div></article>
+    <article class="stat"><span class="s-ic red">{{template "icon" (dict "Name" "alert")}}</span><div><small>Lewat Jatuh Tempo</small><b class="mono">{{money .SupplierOverdueTotal}}</b><em>{{.SupplierOverdueCount}} nota belum lunas</em></div></article>
+  </section>
+  <section class="card">
+    <div class="supplier-detail-table-head"><div><h3>Riwayat Nota</h3><p>Semua nota untuk {{.SupplierName}}</p></div><span class="badge-soft">{{.SupplierBillCount}} nota</span></div>
+    <div class="tablewrap"><table class="grid supplier-detail-table"><thead><tr><th>No. Nota</th><th>Tanggal Nota</th><th>Tanggal Barang Masuk</th><th>Nominal</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
+      {{range .SupplierBills}}<tr><td class="mono strong">{{.InvoiceNo}}</td><td>{{dateString .InvoiceDate}}</td><td>{{dateString .ReceivedDate}}</td><td class="mono strong">{{money .Amount}}</td><td>{{dateString .DueDate}}</td><td><span class="chip {{if eq .Status "Lunas"}}chip-ok{{else}}chip-warn{{end}}">{{.Status}}</span></td><td><div class="sales-row-actions"><a class="btn btn-out" href="/daftar-supplier?supplier={{urlquery $.SupplierName}}&edit={{urlquery .ID}}&detail=1">Ubah</a><a class="btn btn-danger" href="/daftar-supplier?supplier={{urlquery $.SupplierName}}&hapus={{urlquery .ID}}">Hapus</a></div></td></tr>{{else}}<tr><td colspan="7" class="muted">Belum ada nota untuk supplier ini. Pilih Tambah Nota untuk mulai mencatat.</td></tr>{{end}}
+    </tbody></table></div>
+  </section>
+  {{else}}
+  <section class="card supplier-detail-empty"><span class="s-ic purple">{{template "icon" (dict "Name" "receipt")}}</span><h3>Supplier tidak ditemukan</h3><p>Nama supplier ini belum terdaftar.</p><a class="btn btn-success" href="/daftar-supplier">Buka Daftar Supplier</a></section>
+  {{end}}
+</div>
+{{end}}

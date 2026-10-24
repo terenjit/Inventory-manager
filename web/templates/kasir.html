@@ -1,0 +1,120 @@
+{{define "kasir"}}
+<div class="sale-entry" id="kasirEntry">
+  <section class="card sale-head-card">
+    <div class="sale-topline">
+      <div>
+        <small class="eyebrow">KASIR</small>
+        <h2>Transaksi Baru</h2>
+        <p>Tambahkan item, periksa jumlah, lalu selesaikan pembayaran.</p>
+      </div>
+      <div class="sale-total-box" aria-live="polite">
+        <span>Total transaksi</span>
+        <strong id="k-total">Rp 0</strong>
+      </div>
+    </div>
+
+    <div class="sale-meta-grid">
+      {{if eq .CashierRole "admin"}}
+      <label class="field">
+        <span>Toko <span style="color:var(--danger)">*</span></span>
+        <select id="k-store">
+          <option value="">— Pilih Toko —</option>
+        </select>
+      </label>
+      {{end}}
+      <label class="field">
+        <span>Pelanggan</span>
+        <input id="k-cust" placeholder="Nama pelanggan (opsional)" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Sales</span>
+        <select id="k-sales">
+          <option value="">Pilih sales (opsional)</option>
+        </select>
+      </label>
+      <label class="field" style="flex:1 1 100%">
+        <span>Keterangan</span>
+        <input id="k-note" placeholder="Catatan transaksi (opsional)" autocomplete="off">
+      </label>
+    </div>
+  </section>
+
+  <section class="card sale-items-card">
+    <header class="card-head">
+      <div>
+        <h2>Item transaksi</h2>
+        <p>Cari berdasarkan kode atau nama item. Jumlah mengikuti satuan barang (meter atau pcs).</p>
+      </div>
+      <span class="badge-soft" id="k-count">0 item</span>
+    </header>
+
+    <div class="sale-add-row">
+      <label class="field sale-product-field">
+        <span>Kode atau nama item</span>
+        <input id="k-prod" list="k-prod-dl" placeholder="Ketik kode atau nama..." autocomplete="off">
+        <datalist id="k-prod-dl">
+          {{range .Products}}<option value="{{.SKU}} — {{.Name}}"></option>{{end}}
+        </datalist>
+      </label>
+      <label class="field sale-qty-field">
+        <span id="k-qty-label">Jumlah</span>
+        <input id="k-qty" type="number" min="0.1" step="0.1" value="1.0" inputmode="decimal">
+      </label>
+      <button class="btn btn-success sale-add-btn" id="k-add" type="button">{{template "icon" (dict "Name" "plus")}} Tambah item</button>
+    </div>
+    <p class="sale-stock-hint" id="k-hint">Pilih item untuk melihat harga dan stok yang tersedia.</p>
+
+    <div class="tablewrap sale-table-wrap">
+      <table class="grid sale-table">
+        <thead><tr><th>No</th><th>Kode</th><th>Nama item</th><th class="right">Jumlah</th><th>Satuan</th><th class="right">Harga/satuan</th><th class="right">Total</th><th></th></tr></thead>
+        <tbody id="k-rows"></tbody>
+      </table>
+      <div class="sale-empty" id="k-empty">
+        {{template "icon" (dict "Name" "receipt")}}
+        <b>Belum ada item</b>
+        <span>Cari barang di atas, masukkan jumlah sesuai satuannya, lalu pilih Tambah item.</span>
+      </div>
+    </div>
+
+    <div class="sale-bottom">
+      <div class="sale-discount-field">
+        <label class="field">
+          <span>Diskon (%)</span>
+          <input id="k-disc-pct" type="number" min="0" max="100" step="0.1" value="0" inputmode="decimal" aria-label="Persentase diskon">
+        </label>
+        <label class="field">
+          <span>Potongan (Rp)</span>
+          <input id="k-disc-rp" type="text" inputmode="numeric" data-money-input value="0" placeholder="Masukkan potongan" aria-label="Nilai potongan rupiah">
+        </label>
+      </div>
+      <div class="sale-summary">
+        <div><span>Subtotal</span><b id="k-sub">Rp 0</b></div>
+        <div><span>Diskon</span><b id="k-disc-val">− Rp 0</b></div>
+        <div class="sale-summary-total"><span>Total</span><b id="k-sum-total">Rp 0</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="methods" id="k-methods">
+      <button class="is-active" data-pay="Cash" type="button">Cash</button>
+      <button data-pay="QRIS" type="button">QRIS</button>
+      <button data-pay="Transfer" type="button">Transfer</button>
+      <button data-pay="DP" type="button">DP</button>
+    </div>
+    <label class="field" style="margin-top:12px"><span>Nominal Bayar</span><input id="k-paid" type="text" inputmode="numeric" data-money-input placeholder="0" autocomplete="off"></label>
+    <div class="change" id="k-change-box"><span id="k-change-lbl">Kembalian</span><b class="mono" id="k-change">Rp 0</b></div>
+    <footer class="sale-actions">
+      <a class="btn btn-out" href="/penjualan">Batal</a>
+      <button class="btn btn-out" id="k-clear" type="button" disabled>Kosongkan item</button>
+      <button class="btn btn-pay" id="k-save" type="button" disabled>{{template "icon" (dict "Name" "wallet")}} Simpan Transaksi</button>
+    </footer>
+  </section>
+
+  <div id="k-products" class="product-catalog-data" hidden>
+    {{range .Products}}<button class="k-prod-item" type="button"
+      data-id="{{.ID}}" data-sku="{{.SKU}}" data-name="{{.Name}}"
+      data-price="{{.Price}}" data-stock="{{.Stock}}" data-unit="{{.Unit}}"></button>{{end}}
+  </div>
+</div>
+{{end}}

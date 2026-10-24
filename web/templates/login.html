@@ -1,0 +1,48 @@
+{{define "login"}}<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Masuk — Textile POS</title>
+<meta name="theme-color" content="#9c27b0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body data-page="login" class="login-page">
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="brand-mark">T</span>
+      <div class="brand-txt">
+        <b>Textile POS</b>
+        <small>{{.Company}}</small>
+      </div>
+    </div>
+
+    <h2>Masuk ke akun</h2>
+    <p class="login-sub">Masukkan nama pengguna dan kata sandi Anda.</p>
+
+    <div id="loginError" class="login-error" hidden></div>
+
+    <form class="form" id="loginForm" autocomplete="on">
+      <label class="field">
+        <span>Nama Pengguna</span>
+        <input id="loginUsername" name="username" type="text" required autocomplete="username" placeholder="Contoh: admin">
+      </label>
+      <label class="field">
+        <span>Kata Sandi</span>
+        <input id="loginPassword" name="password" type="password" required autocomplete="current-password" placeholder="Kata sandi">
+      </label>
+      <button class="btn btn-pay login-btn" type="submit" id="loginBtn">Masuk</button>
+    </form>
+  </div>
+  <footer class="login-foot">Textile POS {{.Build}} &middot; {{.Company}}</footer>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>{{end}}

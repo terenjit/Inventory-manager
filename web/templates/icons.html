@@ -1,0 +1,63 @@
+{{define "icon"}}<svg class="ic {{.Class}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{if eq .Name "menu"}}
+    <path d="M4 7h16M4 12h16M4 17h16" />{{else if eq .Name "bell"}}
+    <path d="M18 8a6 6 0 1 0-12 0c0 6.5-2.5 7.5-2.5 7.5h17S18 14.5 18 8" />
+    <path d="M13.8 20a2 2 0 0 1-3.6 0" />{{else if eq .Name "chevron-down"}}
+    <path d="m6 9 6 6 6-6" />{{else if eq .Name "chevron-left"}}
+    <path d="m15 18-6-6 6-6" />{{else if eq .Name "chevron-right"}}
+    <path d="m9 18 6-6-6-6" />{{else if eq .Name "search"}}
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20.5 20.5-3.9-3.9" />{{else if eq .Name "plus"}}
+    <path d="M12 5v14M5 12h14" />{{else if eq .Name "pencil"}}
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7.5 18.5 3 20l1.5-4.5Z" />{{else if eq .Name "trash"}}
+    <path d="M3 6h18M8.5 6V4h7v2M6 6l1 14h10l1-14" />{{else if eq .Name "printer"}}
+    <path d="M7 9V3h10v6" />
+    <path d="M7 18H4v-7h16v7h-3" />
+    <path d="M7 14h10v7H7z" />{{else if eq .Name "home"}}
+    <path d="M3 11 12 3l9 8" />
+    <path d="M5.5 9.8V21h13V9.8" />{{else if eq .Name "box"}}
+    <path d="M12 3 3 7.5v9L12 21l9-4.5v-9Z" />
+    <path d="M3 7.5 12 12l9-4.5M12 12v9" />{{else if eq .Name "cart"}}
+    <circle cx="9.5" cy="20" r="1.4" />
+    <circle cx="18" cy="20" r="1.4" />
+    <path d="M2 3h2.8l2.7 12.1a1 1 0 0 0 1 .8h9a1 1 0 0 0 1-.8L21 8H6" />{{else if eq .Name "layers"}}
+    <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+    <path d="m3 13 9 5 9-5" />{{else if eq .Name "chart"}}
+    <path d="M3 21h18" />
+    <path d="M6.5 17V10M11.5 17V5M16.5 17v-4" />{{else if eq .Name "gear"}}
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 2.8v2.4M12 18.8v2.4M4.6 7.5l2 1.2M17.4 15.3l2 1.2M4.6 16.5l2-1.2M17.4 8.7l2-1.2" />{{else if eq .Name
+    "user"}}
+    <circle cx="12" cy="8" r="3.6" />
+    <path d="M4.5 20.5c0-3.8 3.4-5.8 7.5-5.8s7.5 2 7.5 5.8" />{{else if eq .Name "users"}}
+    <circle cx="9" cy="8" r="3.4" />
+    <path d="M2.8 20c0-3.5 2.9-5.3 6.2-5.3s6.2 1.8 6.2 5.3" />
+    <path d="M16 5.4A3.4 3.4 0 0 1 16 14M18.2 20c0-2-.6-3.6-1.6-4.6" />{{else if eq .Name "logout"}}
+    <path d="M9.5 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4.5" />
+    <path d="m16 16.5 4.5-4.5L16 7.5M20.5 12H9.5" />{{else if eq .Name "close"}}
+    <path d="M18 6 6 18M6 6l12 12" />{{else if eq .Name "receipt"}}
+    <path d="M5.5 3v18l2.5-1.6L10.5 21l2-1.6L15 21l2.5-1.6L20 21V3Z" />
+    <path d="M9 8h6M9 12h6M9 16h3" />{{else if eq .Name "filter"}}
+    <path d="M3.5 5h17l-6.6 7.8V20l-3.8-2v-5.2Z" />{{else if eq .Name "refresh"}}
+    <path d="M20.5 11.5a8.5 8.5 0 1 0-2.2 6.4" />
+    <path d="M20.5 5v6.5H14" />{{else if eq .Name "clipboard"}}
+    <path d="M9.5 4.5h5V7h-5z" />
+    <path d="M15.5 6h3v14.5h-13V6h3" />
+    <path d="M9.5 12h5M9.5 16h3.5" />{{else if eq .Name "alert"}}
+    <path d="M12 4 2.8 20h18.4Z" />
+    <path d="M12 10v4M12 17.4v.3" />{{else if eq .Name "check"}}
+    <path d="m5 12.5 4.5 4.5L19 7" />{{else if eq .Name "arrow-right"}}
+    <path d="M4 12h14.5M13 6.5l5.5 5.5-5.5 5.5" />{{else if eq .Name "download"}}
+    <path d="M12 3.5v11M7.5 10.5 12 15l4.5-4.5M4 20.5h16" />{{else if eq .Name "upload"}}
+    <path d="M12 16V5.5M7.5 10 12 5.5 16.5 10M4 17.5v3h16v-3" />{{else if eq .Name "eye"}}
+    <path d="M2 12s3.7-7 10-7 10 7 10 7-3.7 7-10 7-10-7-10-7Z" />
+    <circle cx="12" cy="12" r="3" />{{else if eq .Name "truck"}}
+    <path d="M2.5 6.5h11v10h-11z" />
+    <path d="M13.5 10h4l3 3v3.5h-7" />
+    <circle cx="7" cy="18.5" r="1.8" />
+    <circle cx="17" cy="18.5" r="1.8" />{{else if eq .Name "wallet"}}
+    <path d="M3.5 7.5A2 2 0 0 1 5.5 5.5H18v3" />
+    <path d="M3.5 7.5v11a2 2 0 0 0 2 2h15v-13h-17Z" />
+    <path d="M20.5 13.5h-4a1.8 1.8 0 0 0 0 3.6h4z" />{{end}}
+</svg>{{end}}

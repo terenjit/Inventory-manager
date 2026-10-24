@@ -1,0 +1,34 @@
+{{define "komisi-sales"}}
+<section class="card commission-report" id="commissionReport">
+  <header class="card-head">
+    <div><small class="eyebrow">LAPORAN</small><h2>Komisi Sales</h2><p>Komisi dihitung dari nilai item setelah diskon transaksi, berdasarkan persentase komisi masing-masing sales.</p></div>
+  </header>
+  <div class="commission-filters no-print">
+    <label class="field"><span>Dari tanggal</span><input type="date" id="commissionFrom"></label>
+    <label class="field"><span>Sampai tanggal</span><input type="date" id="commissionTo"></label>
+    <label class="field"><span>Sales</span><select id="commissionSales"><option value="">Semua sales</option></select></label>
+    <button class="btn btn-success" id="commissionApply" type="button">{{template "icon" (dict "Name" "search")}} Cari</button>
+    <button class="btn btn-out" id="commissionReset" type="button">{{template "icon" (dict "Name" "refresh")}} Reset</button>
+  </div>
+  <div class="commission-summary">
+    <div><span>Jumlah transaksi</span><strong id="commissionCount">—</strong></div>
+    <div><span>Total nilai terjual</span><strong id="commissionSalesTotal">—</strong></div>
+    <div><span>Total komisi</span><strong id="commissionTotal">—</strong></div>
+  </div>
+  <h3 class="commission-section-title">Ringkasan per sales</h3>
+  <div class="tablewrap commission-summary-table">
+    <table class="grid">
+      <thead><tr><th>Sales</th><th class="right">Jml. Transaksi</th><th class="right">Total Nilai Terjual</th><th class="right">Komisi (%)</th><th class="right">Total Komisi</th></tr></thead>
+      <tbody id="commissionSalesSummary"><tr><td colspan="5" class="muted">Pilih periode dan klik Cari.</td></tr></tbody>
+    </table>
+  </div>
+  <h3 class="commission-section-title">Rincian per item</h3>
+  <div class="tablewrap">
+    <table class="grid">
+      <thead><tr><th>Tanggal</th><th>No. Transaksi</th><th>Sales</th><th>Pelanggan</th><th>Kode Item</th><th>Nama Item</th><th class="right">Jumlah</th><th class="right">Komisi (%)</th><th class="right">Nilai Komisi</th></tr></thead>
+      <tbody id="commissionRows"><tr><td colspan="9" class="muted">Pilih periode dan klik Cari.</td></tr></tbody>
+    </table>
+  </div>
+  <p class="commission-note">Komisi dihitung dari nilai item setelah diskon transaksi dibagi proporsional. Transaksi void tidak ikut dihitung.</p>
+</section>
+{{end}}

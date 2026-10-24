@@ -1,0 +1,36 @@
+{{define "datasheet"}}
+<div class="stack datasheet-page">
+  <section class="card datasheet-head">
+    <div>
+      <small class="eyebrow">MASTER DATA BARANG</small>
+      <h2>Datasheet Barang</h2>
+      <p>Impor atau ekspor daftar barang dalam format Excel.</p>
+    </div>
+    <div class="datasheet-head-actions">
+      <span class="badge-soft">{{len .Products}} barang</span>
+      <a class="btn btn-success" href="/daftar-item?add=1">{{template "icon" (dict "Name" "plus")}} Tambah Barang</a>
+    </div>
+  </section>
+
+  <section class="cards datasheet-actions">
+    <article class="card datasheet-action-card">
+      <span class="s-ic purple">{{template "icon" (dict "Name" "download")}}</span>
+      <div class="datasheet-action-copy"><h3>Ekspor barang</h3><p>Unduh seluruh daftar barang sebagai file Excel (.xlsx).</p></div>
+      <a class="btn btn-out" href="/api/datasheet/export">Ekspor Excel</a>
+    </article>
+
+    <article class="card datasheet-action-card">
+      <span class="s-ic green">{{template "icon" (dict "Name" "upload")}}</span>
+      <div class="datasheet-action-copy"><h3>Impor dari Excel</h3><p>Gunakan file .xlsx. Barang dengan kode yang sama akan diperbarui.</p></div>
+      <label class="field datasheet-file"><span>File Excel (.xlsx)</span><input id="excelFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
+      <span id="excelFileName" class="datasheet-file-name">Belum ada file dipilih</span>
+      <button class="btn btn-success" id="importExcel" type="button" disabled>Impor Data Barang</button>
+    </article>
+  </section>
+
+  <section class="card datasheet-guide">
+    <div><h3>Format kolom Excel</h3><p>Kolom Kode Item, Nama Item, Jenis, Stok, Satuan, Harga Pokok, dan Harga Jual wajib diisi. Komisi sales dihitung otomatis sebesar 1%.</p></div>
+    <div class="datasheet-columns"><code>Kode Item</code><code>Nama Item</code><code>Jenis</code><code>Stok</code><code>Satuan</code><code>Harga Pokok</code><code>Harga Jual</code><code>Margin / satuan (otomatis)</code></div>
+  </section>
+</div>
+{{end}}

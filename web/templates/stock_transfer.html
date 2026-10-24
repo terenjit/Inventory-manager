@@ -1,0 +1,94 @@
+{{define "stock-transfer"}}
+<div class="transfer-page" data-transfer-type="{{.TransferType}}">
+  <section class="card transfer-form no-print">
+    <div class="transfer-heading">
+      <div>
+        <small class="eyebrow">PERPINDAHAN STOK ANTAR TOKO</small>
+        <h2>{{if eq .TransferType "in"}}Barang Masuk{{else}}Barang Keluar{{end}}</h2>
+        <p>{{if eq .TransferType "in"}}Catat barang yang diterima dari toko lain. Stok toko ini akan bertambah.{{else}}Catat barang yang dikirim ke toko lain. Stok toko ini akan berkurang.{{end}}</p>
+      </div>
+      <span class="transfer-direction">{{if eq .TransferType "in"}}Penerimaan barang{{else}}Pengiriman barang{{end}}</span>
+    </div>
+
+    <div class="transfer-meta">
+      <label class="field">
+        <span>{{if eq .TransferType "in"}}Diterima dari toko{{else}}Dikirim dari toko{{end}}</span>
+        <select id="fromStore" required>
+          <option value="">Pilih toko</option>
+          <option>Toko A</option>
+          <option>Toko B</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>{{if eq .TransferType "in"}}Diterima di{{else}}Diterima di toko tujuan{{end}}</span>
+        <select id="toStore" required>
+          <option value="">Pilih toko</option>
+          <option>Toko A</option>
+          <option>Toko B</option>
+        </select>
+      </label>
+      <label class="field transfer-note">
+        <span>Keterangan (opsional)</span>
+        <input id="transferNote" placeholder="Contoh: penukaran stok kain antar cabang">
+      </label>
+    </div>
+
+    <div class="transfer-add-row">
+      <label class="field transfer-product">
+        <span>Kode atau nama barang</span>
+        <input id="transferProduct" list="transferProductOptions" placeholder="Cari item berdasarkan kode atau nama" autocomplete="off">
+        <datalist id="transferProductOptions">{{range .Products}}<option value="{{.SKU}} — {{.Name}}"></option>{{end}}</datalist>
+      </label>
+      <label class="field transfer-qty">
+        <span id="transferQtyLabel">Jumlah</span>
+        <input id="transferQty" type="number" min="0.1" step="0.1" value="1.0" inputmode="decimal">
+      </label>
+      <button class="btn btn-success" id="transferAdd" type="button">{{template "icon" (dict "Name" "plus")}} Tambah barang</button>
+    </div>
+    <p class="transfer-hint" id="transferHint">Jumlah mengikuti satuan barang. Stok tersedia akan diperiksa sebelum transaksi disimpan.</p>
+
+    <div class="tablewrap transfer-item-wrap">
+      <table class="grid">
+        <thead><tr><th>No</th><th>Kode</th><th>Nama barang</th><th class="right">Jumlah</th><th>Satuan</th><th class="right">Stok saat ini</th><th></th></tr></thead>
+        <tbody id="transferItems"></tbody>
+      </table>
+      <div class="transfer-empty" id="transferEmpty"><b>Belum ada barang</b><span>Tambahkan barang yang akan dipindahkan dari toko atau ke toko ini.</span></div>
+    </div>
+
+    <footer class="transfer-footer">
+      <div><span>Total barang</span><b id="transferCount">0 item</b></div>
+      <div><span>Total jumlah</span><b id="transferTotal">0</b></div>
+      <button class="btn btn-success" id="transferSave" type="button" disabled>{{if eq .TransferType "in"}}Simpan Barang Masuk{{else}}Simpan Barang Keluar{{end}}</button>
+    </footer>
+  </section>
+
+  <section class="card transfer-history">
+    <div class="card-head">
+      <div><h2>Riwayat {{if eq .TransferType "in"}}Barang Masuk{{else}}Barang Keluar{{end}}</h2><p>{{len .Transfers}} transaksi perpindahan stok tercatat.</p></div>
+      <button class="btn btn-out no-print" id="printTransfers" type="button">{{template "icon" (dict "Name" "printer")}} Pratinjau Riwayat</button>
+    </div>
+    <div class="tablewrap">
+      <table class="grid">
+        <thead><tr><th>No. Transaksi</th><th>Tanggal</th><th>{{if eq .TransferType "in"}}Asal toko{{else}}Tujuan toko{{end}}</th><th>Barang</th><th class="right">Total jumlah</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          {{range .Transfers}}
+          <tr>
+            <td class="mono strong">{{.No}}</td><td class="mono">{{dt .Date}}</td>
+            <td>{{if eq .Type "in"}}{{.From}}{{else}}{{.To}}{{end}}</td>
+            <td><details class="sale-detail"><summary>{{.Count}} item · {{.QuantitySummary}}</summary>
+              <div class="sale-detail-panel"><table><thead><tr><th>Kode</th><th>Nama barang</th><th class="right">Jumlah</th></tr></thead>
+                <tbody>{{range .Items}}<tr><td class="mono">{{.SKU}}</td><td>{{.Name}}</td><td class="right">{{qtyText .Qty .Unit}}</td></tr>{{end}}</tbody>
+              </table></div></details></td>
+            <td class="right mono">{{.QuantitySummary}}</td><td>{{if .Note}}{{.Note}}{{else}}<span class="muted">&mdash;</span>{{end}}</td>
+          </tr>
+          {{else}}
+          <tr><td colspan="6" class="muted">Belum ada riwayat perpindahan barang.</td></tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div id="transferProductCatalog" class="product-catalog-data" hidden>{{range .Products}}<button class="transfer-product-option" type="button" data-id="{{.ID}}" data-sku="{{.SKU}}" data-name="{{.Name}}" data-stock="{{.Stock}}" data-unit="{{.Unit}}"></button>{{end}}</div>
+</div>
+{{end}}

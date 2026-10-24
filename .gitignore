@@ -1,0 +1,19 @@
+# Environment / secrets
+.env
+
+# Build output
+/inventory-manager
+/server
+
+# Go test cache
+*.test
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp

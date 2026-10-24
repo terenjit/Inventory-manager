@@ -1,0 +1,92 @@
+{{define "items"}}
+<div class="stack">
+  <section class="cards items-stats">
+    <article class="stat">
+      <span class="s-ic purple">{{template "icon" (dict "Name" "box")}}</span>
+      <div><small>Total Item</small><b class="mono">{{len .Products}}</b><em>{{len .Categories}} jenis</em></div>
+    </article>
+    <article class="stat">
+      <span class="s-ic green">{{template "icon" (dict "Name" "layers")}}</span>
+      <div><small>Nilai Persediaan</small><b class="mono">{{money .StockValue}}</b><em>Berdasarkan harga modal</em></div>
+    </article>
+    <article class="stat">
+      <span class="s-ic amber">{{template "icon" (dict "Name" "alert")}}</span>
+      <div><small>Stok Menipis</small><b class="mono">{{len .LowStock}}</b><em>Perlu restock segera</em></div>
+    </article>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <label class="search">
+        {{template "icon" (dict "Name" "search")}}
+        <input id="isearch" type="search" placeholder="Cari kode, nama, atau jenis barang..." autocomplete="off">
+      </label>
+      <select id="icat">
+        <option value="">Semua jenis</option>
+        {{range .Categories}}<option>{{.}}</option>{{end}}
+      </select>
+      <select id="istock">
+        <option value="">Semua stok</option>
+        <option value="low">Stok menipis</option>
+        <option value="ok">Stok aman</option>
+      </select>
+      <select id="istore">
+        <option value="">Semua toko</option>
+      </select>
+      <span class="spacer"></span>
+      <button class="btn btn-success" id="addItem" type="button">{{template "icon" (dict "Name" "plus")}} Tambah Barang</button>
+      <button class="btn btn-out" id="editItem" type="button" disabled>{{template "icon" (dict "Name" "pencil")}} Ubah</button>
+      <button class="btn btn-danger" id="delItem" type="button" disabled>{{template "icon" (dict "Name" "trash")}} Hapus</button>
+      <button class="btn btn-out" data-soon type="button">{{template "icon" (dict "Name" "printer")}} Laporan</button>
+    </div>
+
+    <div class="tablewrap">
+      <table class="grid" id="itemTable">
+        <thead>
+          <tr>
+            <th class="c-pick"></th>
+            <th>Kode Item</th>
+            <th>Nama Item</th>
+            <th>Toko</th>
+            <th>Jenis</th>
+            <th class="right">Stok</th>
+            <th>Satuan</th>
+            <th class="right">Harga Pokok</th>
+            <th class="right">Harga Jual</th>
+            <th class="right">Margin / satuan</th>
+          </tr>
+        </thead>
+        <tbody id="itemRows">
+          {{range .Products}}
+          <tr class="grow" data-sku="{{.SKU}}" data-cat="{{.Category}}" data-low="{{.Low}}"
+              data-store-id="{{.StoreID}}" data-store-name="{{.StoreName}}"
+              data-hay="{{.SKU}} {{.Name}} {{.Category}} {{.StoreName}} {{.Unit}}">
+            <td class="c-pick"><span class="tick"></span></td>
+            <td class="mono strong">{{.SKU}}</td>
+            <td class="strong">{{.Name}}</td>
+            <td>{{if .StoreName}}<span class="chip chip-soft">{{.StoreName}}</span>{{else}}<span class="dim">—</span>{{end}}</td>
+            <td><span class="chip chip-soft">{{if .Category}}{{.Category}}{{else}}Umum{{end}}</span></td>
+            <td class="right mono strong">{{qtyText .Stock .Unit}}</td>
+            <td>{{if eq .Unit "pcs"}}pcs{{else}}meter{{end}}</td>
+            <td class="right mono dim">{{rp .Cost}}</td>
+            <td class="right mono">{{rp .Price}}</td>
+            <td class="right mono">{{money (sub .Price .Cost)}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <div class="nodata" id="itemNoData"{{if .Products}} hidden{{end}}>
+        {{template "icon" (dict "Name" "search")}}
+        <b>Item tidak ditemukan</b>
+        <small>Ubah kata kunci atau jenis barang.</small>
+      </div>
+    </div>
+
+    <div class="tablefoot">
+      <span id="itemCount">&nbsp;</span>
+      <span class="spacer"></span>
+      <span class="dim">Klik baris untuk memilih</span>
+    </div>
+  </section>
+</div>
+{{end}}

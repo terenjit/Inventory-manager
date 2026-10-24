@@ -1,0 +1,47 @@
+{{define "admin-users"}}
+<div class="stack admin-users-page">
+  <section class="card admin-users-head">
+    <div>
+      <small class="eyebrow">PENGATURAN · DATA USER</small>
+      <h2>Manajemen Pengguna</h2>
+      <p>Kelola akun yang dapat mengakses sistem ini.</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-out" id="addCashier" type="button">{{template "icon" (dict "Name" "plus")}} Tambah Kasir</button>
+      <button class="btn btn-success" id="addAdmin" type="button">{{template "icon" (dict "Name" "plus")}} Tambah Admin</button>
+    </div>
+  </section>
+
+  <div class="two" style="align-items:start">
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3>Admin (Pemilik / Manager)</h3>
+          <p style="font-size:13px;color:var(--ink-2)">Akses penuh: semua toko, harga modal, laporan, manajemen user.</p>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table class="grid">
+          <thead><tr><th>Nama</th><th>Username</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="adminRows"><tr><td colspan="4" class="muted">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3>Kasir</h3>
+          <p style="font-size:13px;color:var(--ink-2)">Hanya toko yang ditugaskan: proses transaksi, lihat stok, barang masuk/keluar.</p>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table class="grid">
+          <thead><tr><th>Nama</th><th>Username</th><th>Toko</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="cashierRows"><tr><td colspan="5" class="muted">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+{{end}}

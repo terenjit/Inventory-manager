@@ -1,0 +1,156 @@
+{{define "dashboard"}}
+<div class="stack">
+  <section class="cards">
+    <article class="stat">
+      <span class="s-ic purple">{{template "icon" (dict "Name" "receipt")}}</span>
+      <div>
+        <small>Omzet Hari Ini</small>
+        <b class="mono">{{money .Today.Total}}</b>
+        <em class="{{.ChangeClass}}">{{.ChangeText}} vs kemarin</em>
+      </div>
+    </article>
+    <article class="stat">
+      <span class="s-ic blue">{{template "icon" (dict "Name" "cart")}}</span>
+      <div>
+        <small>Transaksi Hari Ini</small>
+        <b class="mono">{{.Today.Count}}</b>
+        <em>Rata-rata {{money .Avg}} / transaksi</em>
+      </div>
+    </article>
+    <article class="stat">
+      <span class="s-ic green">{{template "icon" (dict "Name" "layers")}}</span>
+      <div>
+        <small>Meter Terjual</small>
+        <b class="mono">{{meter .MeterSold}} m</b>
+        <em>Seluruh transaksi kasir</em>
+      </div>
+    </article>
+    <article class="stat">
+      <span class="s-ic amber">{{template "icon" (dict "Name" "alert")}}</span>
+      <div>
+        <small>Stok Menipis</small>
+        <b class="mono">{{len .LowStock}}</b>
+        <em>Segera restock</em>
+      </div>
+    </article>
+  </section>
+
+  <div class="two">
+    <section class="card chart-card">
+      <header class="card-head">
+        <div>
+          <h2>Penjualan 7 Hari Terakhir</h2>
+          <p>Total omzet harian dari data kasir.</p>
+        </div>
+        <span class="badge-soft">Dept {{.DeptLabel}}</span>
+      </header>
+
+      <div class="chart" id="chart">
+        {{range .Days}}
+        <div class="col" title="{{.Key}}: {{.Text}} &middot; {{.Count}} transaksi">
+          <span class="col-val mono">{{rp .Total}}</span>
+          <span class="col-bar" style="height:{{.PctText}}%"></span>
+          <b class="col-lab">{{.Label}}</b>
+          <small class="col-sub">{{.Count}} trx</small>
+        </div>
+        {{end}}
+      </div>
+      <div class="chart-avg">
+        <span>Rata-rata harian</span>
+        <b class="mono">{{money .AvgDaily}}</b>
+      </div>
+    </section>
+
+    <section class="card">
+      <header class="card-head">
+        <h2>Produk Terlaris</h2>
+        <span class="badge-soft">30 hari</span>
+      </header>
+      <ul class="rank">
+        {{range .TopItems}}
+        <li>
+          <span class="rk">{{.SKU}}</span>
+          <div class="rk-b">
+            <b>{{.Name}}</b>
+            <span class="bar"><i style="width:{{.PctText}}%"></i></span>
+          </div>
+          <div class="rk-v"><b class="mono">{{qtyText .Meter .Unit}}</b><small class="mono">{{money .Total}}</small></div>
+        </li>
+        {{else}}
+        <li class="empty">Belum ada data penjualan.</li>
+        {{end}}
+      </ul>
+    </section>
+  </div>
+
+  <div class="two">
+    <section class="card">
+      <header class="card-head">
+        <h2>Transaksi Terbaru</h2>
+        <a class="link" href="/kasir">Lihat semua</a>
+      </header>
+      <div class="tablewrap">
+        <table class="grid">
+          <thead><tr><th>No Transaksi</th><th>Waktu</th><th>Pelanggan</th><th class="right">Total</th></tr></thead>
+          <tbody>
+            {{range .RecentSales}}
+            <tr>
+              <td class="mono strong">{{.No}}</td>
+              <td class="mono dim">{{dt .Date}}</td>
+              <td>{{.Customer}}</td>
+              <td class="right mono strong">{{rp .Total}}</td>
+            </tr>
+            {{else}}
+            <tr><td colspan="4" class="dim center">Belum ada transaksi.</td></tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <header class="card-head">
+        <h2>Perlu Perhatian</h2>
+        <a class="link" href="/daftar-item">Daftar item</a>
+      </header>
+      <ul class="alert-list">
+        {{range .LowStock}}
+        <li>
+          <span class="s-ic amber sm">{{template "icon" (dict "Name" "alert")}}</span>
+            <div><b>{{.Name}}</b><small>{{.SKU}} &middot; {{.Category}}</small></div>
+            <span class="chip chip-low">{{qtyText .Stock .Unit}}</span>
+        </li>
+        {{else}}
+        <li class="empty">Semua stok aman.</li>
+        {{end}}
+      </ul>
+    </section>
+  </div>
+
+  <section class="card quick">
+    <header class="card-head"><h2>Aktivitas Cepat</h2></header>
+    <div class="quick-grid">
+      <a href="/penjualan" class="qk">
+        <span class="s-ic purple">{{template "icon" (dict "Name" "cart")}}</span>
+        <div><b>Penjualan Baru</b><small>Buka kasir dan input pesanan</small></div>
+        {{template "icon" (dict "Name" "arrow-right" "Class" "go")}}
+      </a>
+      <a href="/kasir" class="qk">
+        <span class="s-ic blue">{{template "icon" (dict "Name" "receipt")}}</span>
+        <div><b>Daftar Kasir</b><small>{{len .Sales}} transaksi tercatat</small></div>
+        {{template "icon" (dict "Name" "arrow-right" "Class" "go")}}
+      </a>
+      <a href="/daftar-item" class="qk">
+        <span class="s-ic green">{{template "icon" (dict "Name" "box")}}</span>
+        <div><b>Daftar Item</b><small>{{len .Products}} produk &middot; {{len .Categories}} kategori</small></div>
+        {{template "icon" (dict "Name" "arrow-right" "Class" "go")}}
+      </a>
+      <a href="/stock-opname" class="qk">
+        <span class="s-ic amber">{{template "icon" (dict "Name" "layers")}}</span>
+        <div><b>Stock Opname</b><small>Hitung ulang stok gudang</small></div>
+        {{template "icon" (dict "Name" "arrow-right" "Class" "go")}}
+      </a>
+    </div>
+  </section>
+</div>
+{{end}}

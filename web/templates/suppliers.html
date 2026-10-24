@@ -1,0 +1,26 @@
+{{define "suppliers"}}
+<div class="stack supplier-bills-page">
+  <section class="cards supplier-bill-stats">
+    <article class="stat"><span class="s-ic purple">{{template "icon" (dict "Name" "receipt")}}</span><div><small>Total Supplier</small><b class="mono" id="supplierCount">0</b><em>Nama supplier terdaftar</em></div></article>
+    <article class="stat"><span class="s-ic amber">{{template "icon" (dict "Name" "wallet")}}</span><div><small>Belum Lunas</small><b class="mono" id="supplierPayable">Rp 0</b><em id="supplierUnpaidCount">0 nota belum lunas</em></div></article>
+    <article class="stat"><span class="s-ic green">{{template "icon" (dict "Name" "check")}}</span><div><small>Sudah Lunas</small><b class="mono" id="supplierPaid">Rp 0</b><em id="supplierPaidCount">0 nota sudah lunas</em></div></article>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <label class="search">{{template "icon" (dict "Name" "search")}}<input id="supplierSearch" type="search" placeholder="Cari nama supplier..." autocomplete="off"></label>
+      <span class="spacer"></span>
+      <button class="btn btn-success" id="addSupplier" type="button">{{template "icon" (dict "Name" "plus")}} Tambah Supplier</button>
+    </div>
+
+    <div class="tablewrap">
+      <table class="grid supplier-bill-table">
+        <thead><tr><th>Nama Supplier</th></tr></thead>
+        <tbody id="supplierBillRows"></tbody>
+      </table>
+      <div class="nodata" id="supplierBillEmpty"><b>Belum ada nota supplier</b><small>Tambahkan nota untuk mulai mencatat barang masuk dan status pembayarannya.</small></div>
+    </div>
+    <div class="tablefoot"><span id="supplierListCount">0 supplier</span><span class="spacer"></span><span>Pilih nama untuk melihat daftar notanya.</span></div>
+  </section>
+</div>
+{{end}}

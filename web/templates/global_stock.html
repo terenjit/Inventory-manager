@@ -1,0 +1,47 @@
+{{define "stok-global"}}
+<div class="stack">
+
+  <section class="card no-print">
+    <div class="filters">
+      <label class="field">
+        <span>Cari Item :</span>
+        <input id="gsSearch" type="search" placeholder="Kode atau nama item..." autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Toko :</span>
+        <select id="gsStore">
+          <option value="">Semua Toko</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Status :</span>
+        <select id="gsStatus">
+          <option value="">Semua item</option>
+          <option value="low">Stok rendah</option>
+          <option value="active">Aktif saja</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="tablewrap">
+      <table class="grid" id="gsTable">
+        <thead id="gsTableHead">
+          <tr><th colspan="7" class="muted">Memuat data...</th></tr>
+        </thead>
+        <tbody id="gsTableBody"></tbody>
+      </table>
+      <div class="nodata" id="gsNodata" hidden>
+        {{template "icon" (dict "Name" "search")}}
+        <b>Tidak ada item ditemukan</b>
+        <small>Coba ubah kata kunci atau filter.</small>
+      </div>
+    </div>
+    <div class="tablefoot">
+      <span id="gsCount">&nbsp;</span>
+    </div>
+  </section>
+
+</div>
+{{end}}

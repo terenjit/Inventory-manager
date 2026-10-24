@@ -1,0 +1,102 @@
+{{define "opname"}}
+<div class="stack">
+  <section class="card opname-head">
+    <div class="opno-top">
+      <div>
+        <small class="eyebrow">Sesi Stock Opname</small>
+        <h2>Stock Opname &mdash; {{.DeptLabel}}</h2>
+        <p>{{.Now}} &middot;-stock-Operator: {{.Cashier}} &middot; <span id="opClock">--:--:--</span></p>
+      </div>
+      <div class="opno-actions">
+        <label class="field sm">
+          <span>Tanggal Opname</span>
+          <input id="opDate" type="date" value="{{dateInput .Now}}">
+        </label>
+        <button class="btn btn-out" id="opReset" type="button">{{template "icon" (dict "Name" "refresh")}} Reset</button>
+        <button class="btn btn-success" id="opSave" type="button">{{template "icon" (dict "Name" "check")}} Simpan Sesi</button>
+        <button class="btn btn-danger" id="opClose" type="button">Selesai &amp; Tutup</button>
+      </div>
+    </div>
+
+    <div class="opno-grid">
+      <div class="opno-cell"><small>Total Item</small><b id="opItems">{{len .Products}}</b></div>
+      <div class="opno-cell"><small>Sudah Dihitung</small><b id="opCounted">0</b></div>
+      <div class="opno-cell"><small>Selisih Found</small><b id="opDiff">0</b></div>
+      <div class="opno-cell"><small>Nilai Selisih</small><b class="mono" id="opDiffValue">Rp 0</b></div>
+      <div class="opno-cell wide">
+        <div class="progress"><span id="opBar" style="width:0%"></span></div>
+        <small id="opProgress">0% selesai</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <label class="field sm">
+        <span>Kode Item</span>
+        <input id="opCode" list="opCodeList" placeholder="Ketik / pilih kode" autocomplete="off">
+        <datalist id="opCodeList">{{range .Products}}<option value="{{.SKU}}">{{.Name}}</option>{{end}}</datalist>
+      </label>
+      <label class="search">
+        {{template "icon" (dict "Name" "search")}}
+        <input id="opSearch" type="search" placeholder="Cari nama item..." autocomplete="off">
+      </label>
+      <button class="btn btn-out" id="opAddRow" type="button">{{template "icon" (dict "Name" "plus")}} Tambah Baris</button>
+      <span class="spacer"></span>
+      <label class="perpage">
+        Baris
+        <select id="opPerPage"><option>10</option><option>25</option><option>50</option><option value="999">Semua</option></select>
+      </label>
+      <button class="btn btn-out" data-soon type="button">{{template "icon" (dict "Name" "printer")}} Cetak Bukti Opname</button>
+    </div>
+
+    <div class="tablewrap">
+      <table class="grid" id="opTable">
+        <thead>
+          <tr>
+            <th class="c-pick"></th>
+            <th>Kode</th>
+            <th>Nama Item</th>
+            <th class="right">Stok Sistem</th>
+            <th class="right">Masuk</th>
+            <th class="right">Keluar</th>
+            <th class="right">Hasil Hitung</th>
+            <th class="right">Selisih</th>
+            <th class="right">Harga</th>
+            <th class="right">Nilai</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody id="opRows">
+          {{range .Products}}
+          <tr class="grow" data-sku="{{.SKU}}" data-name="{{.Name}}" data-unit="{{.Unit}}" data-stock="{{.Stock}}" data-cost="{{.Cost}}" data-hay="{{.SKU}} {{.Name}} {{.Category}}">
+            <td class="c-pick"><span class="tick"></span></td>
+            <td class="mono strong">{{.SKU}}</td>
+            <td class="strong">{{.Name}}</td>
+            <td class="right mono dim">{{qtyText .Stock .Unit}}</td>
+            <td class="right"><input class="cell-in" type="number" step="{{if eq .Unit "pcs"}}1{{else}}0.1{{end}}" min="0" placeholder="0" data-k="in"></td>
+            <td class="right"><input class="cell-in" type="number" step="{{if eq .Unit "pcs"}}1{{else}}0.1{{end}}" min="0" placeholder="0" data-k="out"></td>
+            <td class="right"><input class="cell-in strong" type="number" step="{{if eq .Unit "pcs"}}1{{else}}0.1{{end}}" min="0" placeholder="0" data-k="res"></td>
+            <td class="right mono strong" data-c="diff">&mdash;</td>
+            <td class="right mono dim">{{rp .Price}}</td>
+            <td class="right mono" data-c="value">Rp 0</td>
+            <td><input class="cell-in wide-in" type="text" placeholder="Catatan..." data-k="note"></td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <div class="nodata" id="opNoData"{{if .Products}} hidden{{end}}>
+        {{template "icon" (dict "Name" "search")}}
+        <b>Item tidak ditemukan</b>
+        <small>Cari dengan nama atau kode item lain.</small>
+      </div>
+    </div>
+
+    <div class="tablefoot">
+      <span id="opCountInfo">&nbsp;</span>
+      <span class="spacer"></span>
+      <span>Total hasil hitung <b class="mono" id="opSumMeter">0</b></span>
+    </div>
+  </section>
+</div>
+{{end}}
