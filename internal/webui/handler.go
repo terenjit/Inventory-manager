@@ -71,8 +71,9 @@ func RegisterRoutes(r *gin.Engine, svc Services, build string) {
 	r.GET("/supplier/detail", h.authPage(h.supplierDetailPage))
 	r.GET("/daftar-sales", h.authPage(h.salespersonPage))
 	r.GET("/stock-opname", h.authPage(h.opnamePage))
-	r.GET("/barang-masuk", h.authPage(h.stockInPage))
-	r.GET("/barang-keluar", h.authPage(h.stockOutPage))
+	r.GET("/barang-transfer", h.authPage(h.stockTransferPage))
+	r.GET("/barang-masuk", func(c *gin.Context) { c.Redirect(http.StatusFound, "/barang-transfer?type=in") })
+	r.GET("/barang-keluar", func(c *gin.Context) { c.Redirect(http.StatusFound, "/barang-transfer?type=out") })
 	r.GET("/datasheet", h.authPage(h.datasheetPage))
 	r.GET("/laporan/komisi-sales", h.authPage(h.komisiSalesPage))
 	r.GET("/pengaturan/daftarkan-user", h.authPage(h.adminUsersPage))
@@ -338,20 +339,31 @@ func (h *handler) opnamePage(c *gin.Context, actor auth.Actor, user *auth.User, 
 	h.render(c, pd)
 }
 
-func (h *handler) stockInPage(c *gin.Context, actor auth.Actor, user *auth.User, pd PageData) {
-	pd.Page = "stock-in"
-	pd.Title = "Barang Masuk"
-	pd.TransferType = "in"
-	h.loadTransfers(c, actor, "incoming", &pd)
+func (h *handler) stockTransferPage(c *gin.Context, actor auth.Actor, user *auth.User, pd PageData) {
+	pd.Page = "stock-transfer"
+	t := c.Query("type")
+	if t != "out" {
+		t = "in"
+	}
+	if t == "out" {
+		pd.Title = "Barang Keluar"
+		pd.TransferType = "out"
+		h.loadTransfers(c, actor, "outgoing", &pd)
+	} else {
+		pd.Title = "Barang Masuk"
+		pd.TransferType = "in"
+		h.loadTransfers(c, actor, "incoming", &pd)
+	}
+	h.loadProducts(c, actor, &pd)
 	h.render(c, pd)
 }
 
+func (h *handler) stockInPage(c *gin.Context, actor auth.Actor, user *auth.User, pd PageData) {
+	c.Redirect(http.StatusFound, "/barang-transfer?type=in")
+}
+
 func (h *handler) stockOutPage(c *gin.Context, actor auth.Actor, user *auth.User, pd PageData) {
-	pd.Page = "stock-out"
-	pd.Title = "Barang Keluar"
-	pd.TransferType = "out"
-	h.loadTransfers(c, actor, "outgoing", &pd)
-	h.render(c, pd)
+	c.Redirect(http.StatusFound, "/barang-transfer?type=out")
 }
 
 func (h *handler) datasheetPage(c *gin.Context, actor auth.Actor, user *auth.User, pd PageData) {
@@ -577,6 +589,14 @@ func (h *handler) loadTransfers(c *gin.Context, actor auth.Actor, direction stri
 			From:    t.FromStoreName,
 			To:      t.ToStoreName,
 			Cashier: t.SentByName,
+		}
+		for _, item := range t.Items {
+			uit.Items = append(uit.Items, UITransferItem{
+				SKU:  item.ProductCode,
+				Name: item.ProductName,
+				Qty:  item.Qty.InexactFloat64(),
+				Unit: item.Unit,
+			})
 		}
 		if t.Note != nil {
 			uit.Note = *t.Note

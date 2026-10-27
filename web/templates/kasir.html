@@ -96,18 +96,10 @@
   </section>
 
   <section class="card">
-    <div class="methods" id="k-methods">
-      <button class="is-active" data-pay="Cash" type="button">Cash</button>
-      <button data-pay="QRIS" type="button">QRIS</button>
-      <button data-pay="Transfer" type="button">Transfer</button>
-      <button data-pay="DP" type="button">DP</button>
-    </div>
-    <label class="field" style="margin-top:12px"><span>Nominal Bayar</span><input id="k-paid" type="text" inputmode="numeric" data-money-input placeholder="0" autocomplete="off"></label>
-    <div class="change" id="k-change-box"><span id="k-change-lbl">Kembalian</span><b class="mono" id="k-change">Rp 0</b></div>
     <footer class="sale-actions">
       <a class="btn btn-out" href="/penjualan">Batal</a>
       <button class="btn btn-out" id="k-clear" type="button" disabled>Kosongkan item</button>
-      <button class="btn btn-pay" id="k-save" type="button" disabled>{{template "icon" (dict "Name" "wallet")}} Simpan Transaksi</button>
+      <button class="btn btn-pay" id="k-save" type="button">{{template "icon" (dict "Name" "wallet")}} Lanjut ke Pembayaran</button>
     </footer>
   </section>
 

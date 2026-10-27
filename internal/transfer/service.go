@@ -164,9 +164,29 @@ func (s *service) ListTransfers(ctx context.Context, actor auth.Actor, f ListFil
 		page = 1
 	}
 
+	ids := make([]uint, len(transfers))
+	for i, t := range transfers {
+		ids[i] = t.ID
+	}
+	itemsByTransfer, err := s.repo.GetItemsByTransferIDs(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
 	data := make([]*Response, len(transfers))
 	for i, t := range transfers {
-		data[i] = t.ToResponse(nil)
+		dbItems := itemsByTransfer[t.ID]
+		items := make([]ItemResponse, len(dbItems))
+		for j, it := range dbItems {
+			items[j] = ItemResponse{
+				ProductID:   it.ProductID,
+				ProductCode: it.ProductCode,
+				ProductName: it.ProductName,
+				Unit:        it.Unit,
+				Qty:         it.Qty,
+			}
+		}
+		data[i] = t.ToResponse(items)
 	}
 	return &ListResult{Data: data, Total: total, Page: page, Limit: limit}, nil
 }

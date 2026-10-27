@@ -218,6 +218,8 @@
   function kasirPage() {
     var entry = $('#kasirEntry');
     if (!entry) return;
+    var m = $('#modal');
+    if (m) m.hidden = true;
     var isAdmin = document.body.dataset.role === 'admin';
     var prods = $$('#k-products .k-prod-item').map(function (el) {
       return { id: Number(el.dataset.id) || 0, sku: el.dataset.sku, name: el.dataset.name, price: Number(el.dataset.price), stock: Number(el.dataset.stock), unit: normalizeUnit(el.dataset.unit) };
@@ -257,17 +259,8 @@
       return { sub: sub, disc: disc, total: Math.max(0, sub - disc) };
     }
     function updateChange() {
-      var t = calcT(), paid = parseMoney($('#k-paid').value), isDP = payMethod === 'DP';
-      var short = isDP ? (paid <= 0 || paid > t.total) : paid < t.total;
       var noStore = isAdmin && (!$('#k-store') || !$('#k-store').value);
-      $('#k-change-box').classList.toggle('short', short);
-      $('#k-change-lbl').textContent = isDP ? 'Sisa setelah DP' : (paid >= t.total ? 'Kembalian' : 'Kurang bayar');
-      $('#k-change').textContent = money(isDP ? Math.max(0, t.total - paid) : Math.max(0, paid - t.total));
-      $('#k-save').disabled = cart.length === 0 || short || (isDP && paid <= 0) || (!isDP && paid < t.total) || noStore;
-    }
-    function prefillPaid() {
-      if (payMethod !== 'DP') { var t = calcT(); $('#k-paid').value = groupedMoney(t.total); } else { $('#k-paid').value = ''; }
-      updateChange();
+      $('#k-save').disabled = false;
     }
     function renderSummary() {
       var t = calcT();
@@ -275,9 +268,10 @@
       $('#k-sub').textContent = money(t.sub);
       $('#k-disc-val').textContent = '− ' + money(t.disc);
       $('#k-sum-total').textContent = money(t.total);
-      prefillPaid();
+      updateChange();
     }
     function renderCart() {
+      try {
       var countM = 0, countPcs = 0;
       $('#k-rows').innerHTML = cart.map(function (i, ix) {
         if (i.unit === 'meter') countM += i.qty; else countPcs += i.qty;
@@ -293,6 +287,7 @@
       $('#k-count').textContent = cart.length + ' item' + (parts.length ? ' · ' + parts.join(', ') : '');
       $('#k-clear').disabled = cart.length === 0;
       renderSummary();
+      } catch (err) { console.error(err); toast('RenderCart error: ' + (err && err.message ? err.message : err), 'err'); }
     }
 
     $('#k-prod').addEventListener('input', function () {
@@ -301,6 +296,7 @@
       else { $('#k-qty').step = '0.1'; $('#k-qty').min = '0.1'; $('#k-qty-label').textContent = 'Jumlah'; $('#k-hint').textContent = 'Pilih item untuk melihat harga dan stok yang tersedia.'; }
     });
     $('#k-add').onclick = function () {
+      try {
       var p = findProd($('#k-prod').value);
       if (!p) { toast('Pilih item dari daftar.', 'warn'); return; }
       var qty = normalizeQty(num($('#k-qty').value), p.unit);
@@ -311,19 +307,40 @@
       else cart.push({ id: p.id, sku: p.sku, name: p.name, price: p.price, qty: qty, stock: p.stock, unit: p.unit });
       $('#k-prod').value = ''; $('#k-qty').value = '1.0'; $('#k-qty-label').textContent = 'Jumlah'; $('#k-hint').textContent = 'Pilih item untuk melihat harga dan stok yang tersedia.';
       renderCart();
+      } catch (err) { console.error(err); toast('Add error: ' + (err && err.message ? err.message : err), 'err'); }
     };
     $('#k-rows').addEventListener('click', function (e) { var b = e.target.closest('[data-del]'); if (b) { cart.splice(Number(b.dataset.del), 1); renderCart(); } });
     $('#k-clear').onclick = function () { cart = []; renderCart(); };
     if (isAdmin && $('#k-store')) $('#k-store').addEventListener('change', updateChange);
-    $('#k-disc-pct').addEventListener('input', function () { discMode = 'percent'; renderSummary(); });
-    $('#k-disc-rp').addEventListener('input', function () { discMode = 'amount'; renderSummary(); });
-    $('#k-methods').onclick = function (e) {
-      var b = e.target.closest('button[data-pay]'); if (!b) return;
-      payMethod = b.dataset.pay;
-      $$('#k-methods button').forEach(function (x) { x.classList.toggle('is-active', x === b); });
-      prefillPaid();
-    };
-    $('#k-paid').addEventListener('input', updateChange);
+    updateChange();
+    $('#k-disc-pct').addEventListener('input', function () {
+      discMode = 'percent';
+      var sub = cart.reduce(function (a, i) { return a + i.qty * i.price; }, 0);
+      var pct = Math.max(0, Math.min(100, num($('#k-disc-pct').value)));
+      if (sub > 0) {
+        var disc = Math.round(sub * pct / 100);
+        var rpEl = $('#k-disc-rp');
+        if (rpEl) { rpEl.value = groupedMoney(disc); }
+      } else {
+        var rpEl2 = $('#k-disc-rp');
+        if (rpEl2) rpEl2.value = '0';
+      }
+      renderSummary();
+    });
+    $('#k-disc-rp').addEventListener('input', function () {
+      discMode = 'amount';
+      var sub = cart.reduce(function (a, i) { return a + i.qty * i.price; }, 0);
+      var rpv = parseMoney($('#k-disc-rp').value);
+      if (sub > 0) {
+        var pctCalc = rpv <= 0 ? 0 : Math.min(100, Math.round((rpv / sub) * 1000) / 10);
+        var pctEl = $('#k-disc-pct');
+        if (pctEl) pctEl.value = pctCalc;
+      } else {
+        var pctEl2 = $('#k-disc-pct');
+        if (pctEl2) pctEl2.value = 0;
+      }
+      renderSummary();
+    });
     $('#k-save').onclick = function () {
       var t = calcT();
       var paid = parseMoney($('#k-paid').value) || t.total;
@@ -335,15 +352,68 @@
       var discRp = discMode === 'amount' ? t.disc : 0;
       var cartSnapshot = cart.map(function (i) { return { product_id: i.id, qty: i.qty }; });
 
-      confirmBox({
-        title: 'Konfirmasi Transaksi',
-        body: cart.length + ' item · Total <b>' + money(t.total) + '</b>' + (t.disc > 0 ? ' (diskon ' + money(t.disc) + ')' : '') +
-          '<br>Bayar: <b>' + money(paid) + '</b> · Metode: <b>' + esc(payMethod) + '</b>' +
-          (isDP ? '<br><em>Bill akan tersimpan sebagai pending.</em>' : ''),
-        ok: 'Simpan Transaksi',
-        danger: false
-      }).then(function (ok) {
-        if (!ok) return;
+      var payHtml = '<div style="margin-top:12px"><div class="methods" id="pm"><button class="is-active" data-pay="Cash" type="button">Cash</button><button data-pay="Transfer" type="button">Transfer</button><button data-pay="DP" type="button">DP</button></div><label class="field" style="margin-top:10px"><span>Nominal Bayar</span><input id="pm-paid" type="text" inputmode="numeric" data-money-input value="' + groupedMoney(t.total) + '" autocomplete="off"></label><div class="change" id="pm-change"><span id="pm-change-lbl">Kembalian</span><b class="mono" id="pm-change-val">Rp 0</b></div></div>';
+      try {
+      var d = openModal(
+        '<button class="dialog-x" data-close type="button">&times;</button>' +
+        '<small class="eyebrow">KONFIRMASI</small>' +
+        '<h2>Konfirmasi Transaksi</h2>' +
+        '<p style="color:var(--ink-2);font-size:13.5px;margin:0 0 16px">' + cart.length + ' item · Total <b>' + money(t.total) + '</b>' + (t.disc > 0 ? ' (diskon ' + money(t.disc) + ')' : '') + '</p>' +
+        payHtml +
+        '<div class="form-actions" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line-2)">' +
+        '<button class="btn btn-out" data-cancel type="button">Batal</button>' +
+        '<button class="btn btn-success" data-confirm type="button">Lanjut ke Pembayaran</button></div>'
+      );
+      if (!d) return;
+      // wire payment method buttons
+      var pmBtns = d.querySelectorAll('#pm button');
+      pmBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          pmBtns.forEach(function (x) { x.classList.remove('is-active'); });
+          b.classList.add('is-active');
+          var inp = d.querySelector('#pm-paid');
+          if (!inp) return;
+          if (b.dataset.pay === 'DP') inp.value = '';
+          else inp.value = groupedMoney(t.total);
+          upd();
+        });
+      });
+      var pmInput = d.querySelector('#pm-paid');
+      if (pmInput) pmInput.addEventListener('input', upd);
+      function upd() {
+        var p = parseMoney(d.querySelector('#pm-paid').value);
+        var isDp = (d.querySelector('#pm button.is-active') || {}).dataset && d.querySelector('#pm button.is-active').dataset.pay === 'DP';
+        var mc = d.querySelector('#pm-change');
+        var mcl = d.querySelector('#pm-change-lbl');
+        var mcv = d.querySelector('#pm-change-val');
+        if (isDp) {
+          if (mc) mc.classList.toggle('short', p === null || p === undefined || isNaN(p) || p <= 0 || p > t.total);
+          if (mcl) mcl.textContent = 'Sisa setelah DP';
+          if (mcv) mcv.textContent = money(Math.max(0, t.total - (p || 0)));
+        } else {
+          var pp = p === null || p === undefined || isNaN(p) ? t.total : p;
+          if (mc) mc.classList.toggle('short', pp < t.total);
+          if (mcl) mcl.textContent = pp >= t.total ? 'Kembalian' : 'Kurang bayar';
+          if (mcv) mcv.textContent = money(Math.max(0, pp - t.total));
+        }
+      }
+      upd();
+      d.querySelector('[data-cancel]').onclick = function () { closeModal(); };
+      d.querySelector('[data-confirm]').onclick = function () {
+        var pm = 'Cash';
+        var btns = d.querySelectorAll('#pm button');
+        btns.forEach(function (b) { if (b.classList.contains('is-active')) pm = b.dataset.pay; });
+        var paidM = pmInput ? parseMoney(pmInput.value) : t.total;
+        if (pm === 'DP') {
+          if (paidM === null || paidM === undefined || isNaN(paidM) || paidM <= 0 || paidM > t.total) { toast('Nominal DP tidak valid.', 'warn'); return; }
+        } else {
+          if (paidM === null || paidM === undefined || isNaN(paidM)) paidM = t.total;
+          if (paidM < t.total) { toast('Nominal bayar kurang.', 'warn'); return; }
+        }
+        var noStore = isAdmin && (!$('#k-store') || !$('#k-store').value);
+        if (noStore) { toast('Pilih toko terlebih dahulu.', 'warn'); return; }
+        closeModal();
+        // proceed
         $('#k-save').disabled = true;
         var salesName = ($('#k-sales') && $('#k-sales').selectedIndex > 0) ? $('#k-sales').options[$('#k-sales').selectedIndex].textContent : '—';
         var storeName = (isAdmin && $('#k-store') && $('#k-store').selectedIndex > 0) ? $('#k-store').options[$('#k-store').selectedIndex].textContent : (document.body.dataset.dept || '');
@@ -352,7 +422,7 @@
         var noteVal = $('#k-note') ? $('#k-note').value.trim() : '';
         api('/api/sales', 'POST', {
           customer: customer, sales_id: salesId, store_id: storeId,
-          payment: payMethod, paid: paid,
+          payment: pm, paid: paidM,
           discountPercent: discPct, discountAmount: discRp,
           note: noteVal, items: cartSnapshot
         }).then(function (res) {
@@ -381,8 +451,8 @@
               '<div class="thermal-items-list">' + itemsHtml + '</div><hr>' +
               (Number(res.discountAmount) > 0 ? '<div class="thermal-pair"><span>Subtotal</span><span>' + money(Number(res.subtotal)) + '</span></div><div class="thermal-pair"><span>Diskon</span><span>− ' + money(Number(res.discountAmount)) + '</span></div>' : '') +
               '<div class="thermal-pair" style="font-weight:700"><span>TOTAL</span><b>' + money(Number(res.total)) + '</b></div>' +
-              '<div class="thermal-pair"><span>Metode</span><span>' + esc(payMethod) + '</span></div>' +
-              '<div class="thermal-pair"><span>Dibayar</span><span>' + money(paid) + '</span></div>' +
+              '<div class="thermal-pair"><span>Metode</span><span>' + esc(pm) + '</span></div>' +
+              '<div class="thermal-pair"><span>Dibayar</span><span>' + money(paidM) + '</span></div>' +
               (isPending ? '<div class="thermal-pair"><b>Pending · Sisa</b><b>' + money(Number(res.balance)) + '</b></div>' : '<div class="thermal-pair"><span>Kembalian</span><span>' + money(change) + '</span></div>') +
               '<footer class="thermal-footer">Terima kasih telah berbelanja.<br>Barang yang sudah dibeli tidak dapat dikembalikan.</footer></section>';
           }
@@ -405,9 +475,85 @@
           toast(err.message, 'err');
           $('#k-save').disabled = false;
         });
-      });
+      };
+      } catch (err) {
+        console.error(err);
+        toast('KSave error: ' + (err && err.message ? err.message : err), 'err');
+      }
+      return;
+      if (pm === 'DP') {
+          if (paidM === null || paidM === undefined || isNaN(paidM) || paidM <= 0 || paidM > t.total) { toast('Nominal DP tidak valid.', 'warn'); return; }
+        } else {
+          if (paidM === null || paidM === undefined || isNaN(paidM)) paidM = t.total;
+          if (paidM < t.total) { toast('Nominal bayar kurang.', 'warn'); return; }
+        }
+        var noStore = isAdmin && (!$('#k-store') || !$('#k-store').value);
+        if (noStore) { toast('Pilih toko terlebih dahulu.', 'warn'); return; }
+        $('#k-save').disabled = true;
+        var salesName = ($('#k-sales') && $('#k-sales').selectedIndex > 0) ? $('#k-sales').options[$('#k-sales').selectedIndex].textContent : '—';
+        var storeName = (isAdmin && $('#k-store') && $('#k-store').selectedIndex > 0) ? $('#k-store').options[$('#k-store').selectedIndex].textContent : (document.body.dataset.dept || '');
+        var cashierName = document.body.dataset.cashier || 'Kasir';
+        var cartForReceipt = cart.slice();
+        var noteVal = $('#k-note') ? $('#k-note').value.trim() : '';
+        api('/api/sales', 'POST', {
+          customer: customer, sales_id: salesId, store_id: storeId,
+          payment: pm, paid: paidM,
+          discountPercent: discPct, discountAmount: discRp,
+          note: noteVal, items: cartSnapshot
+        }).then(function (res) {
+          var change = Number(res.change) || 0;
+          var isPending = !!res.pending;
+          var statusHtml = isPending
+            ? '<div class="struk-status struk-pending">Pending · Sisa <b>' + money(Number(res.balance)) + '</b></div>'
+            : '<div class="struk-status struk-paid">Lunas · Kembalian <b>' + money(change) + '</b></div>';
+          var msgText = isPending ? 'Bill disimpan sebagai pending pembayaran.' : 'Pembayaran diterima dan bill ditutup.';
+          function buildReceipt() {
+            var now = new Date();
+            var itemsHtml = cartForReceipt.map(function (i) {
+              return '<div class="thermal-item">' +
+                '<b>' + esc(i.name) + '</b>' +
+                '<div class="thermal-pair"><span>' + qtyText(i.qty, i.unit) + ' × ' + money(i.price) + '</span><b>' + money(i.qty * i.price) + '</b></div>' +
+                '</div>';
+            }).join('');
+            return '<section class="thermal-sheet">' +
+              thermalHeader('RESI PENJUALAN', now.toLocaleString('id-ID')) +
+              '<div class="thermal-receipt-meta">' +
+              '<div><span>No. transaksi</span><b>' + esc(res.no) + '</b></div>' +
+              '<div><span>Pelanggan</span><b>' + esc(customer || 'Pelanggan umum') + '</b></div>' +
+              '<div><span>Sales</span><b>' + esc(salesName) + '</b></div>' +
+              '<div><span>Kasir</span><b>' + esc(cashierName) + '</b></div>' +
+              '</div><hr>' +
+              '<div class="thermal-items-list">' + itemsHtml + '</div><hr>' +
+              (Number(res.discountAmount) > 0 ? '<div class="thermal-pair"><span>Subtotal</span><span>' + money(Number(res.subtotal)) + '</span></div><div class="thermal-pair"><span>Diskon</span><span>− ' + money(Number(res.discountAmount)) + '</span></div>' : '') +
+              '<div class="thermal-pair" style="font-weight:700"><span>TOTAL</span><b>' + money(Number(res.total)) + '</b></div>' +
+              '<div class="thermal-pair"><span>Metode</span><span>' + esc(pm) + '</span></div>' +
+              '<div class="thermal-pair"><span>Dibayar</span><span>' + money(paidM) + '</span></div>' +
+              (isPending ? '<div class="thermal-pair"><b>Pending · Sisa</b><b>' + money(Number(res.balance)) + '</b></div>' : '<div class="thermal-pair"><span>Kembalian</span><span>' + money(change) + '</span></div>') +
+              '<footer class="thermal-footer">Terima kasih telah berbelanja.<br>Barang yang sudah dibeli tidak dapat dikembalikan.</footer></section>';
+          }
+          openModal(
+            '<button class="dialog-x" data-close type="button">&times;</button>' +
+            '<small class="eyebrow">STRUK</small><h2>' + esc(res.no) + '</h2>' +
+            '<p class="struk-total">' + money(Number(res.total)) + '</p>' +
+            statusHtml +
+            '<p class="muted" style="margin:10px 0 16px">' + esc(msgText) + '</p>' +
+            '<div class="form-actions">' +
+            '<button class="btn btn-out" id="strukTutup" type="button">Tutup</button>' +
+            '<button class="btn btn-success" id="strukResi" type="button">Pratinjau Resi</button>' +
+            '<button class="btn btn-out" id="strukPenjualan" type="button">Lihat Riwayat Penjualan</button>' +
+            '</div>'
+          );
+          $('#strukTutup').onclick = function () { closeModal(); location.reload(); };
+          $('#strukPenjualan').onclick = function () { location.href = '/penjualan'; };
+          $('#strukResi').onclick = function () { thermalPreview('Resi penjualan', buildReceipt()); };
+        }).catch(function (err) {
+          toast(err.message, 'err');
+          $('#k-save').disabled = false;
+        });
     };
+    updateChange();
     renderCart();
+    if ($('#k-save')) $('#k-save').disabled = false;
   }
 
   /* -------------------------------------------------------------- penjualan */
@@ -843,9 +989,10 @@
             '<td class="right">0,00</td>' +
             '<td class="right">' + money(Number(it.line_total)) + '</td></tr>';
         }).join('');
+        var storeLabel = d.dept || (document.body.dataset.dept) || 'Sumbawa Textile';
         return '<article class="report-sale">' +
           '<div class="report-sale-meta"><b>' + esc(d.no) + '</b><span>' + esc(date.toLocaleDateString('id-ID')) + '</span>' +
-          '<span>' + esc(d.dept || 'SWT') + '</span><span>' + esc(d.sales || '—') + '</span>' +
+          '<span>' + esc(storeLabel) + '</span><span>' + esc(d.sales || '—') + '</span>' +
           '<strong>' + esc(d.name || 'UMUM/CASH') + '</strong><span>—</span></div>' +
           '<table class="report-items"><thead><tr><th>No</th><th>Kd. Item</th><th>Nama Item</th>' +
           '<th class="right">Jml</th><th>Satuan</th><th class="right">Harga</th><th class="right">Pot%</th><th class="right">Total</th></tr></thead>' +
@@ -863,7 +1010,8 @@
         return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : iso;
       }
       var period = state.dari || state.sampai ? reportDate(state.dari || state.sampai) + ' 00:00:00 — ' + reportDate(state.sampai || state.dari) + ' 23:59:59' : 'Semua tanggal';
-      var reportMarkup = '<section class="report-a4"><header class="report-a4-head"><div class="report-brand"><span class="report-logo">S</span><div><h1>Laporan Penjualan Detail</h1><b>Sumbawa Textile</b></div></div>' +
+      var reportShopName = document.body.dataset.dept || 'Sumbawa Textile';
+      var reportMarkup = '<section class="report-a4"><header class="report-a4-head"><div class="report-brand"><span class="report-logo">S</span><div><h1>Laporan Penjualan Detail</h1><b>' + esc(reportShopName) + '</b></div></div>' +
         '<dl><dt>Periode</dt><dd>' + esc(period) + '</dd><dt>No Transaksi</dt><dd>' + esc(state.q || '—') + '</dd><dt>Pelanggan</dt><dd>—</dd><dt>Supplier</dt><dd>—</dd></dl></header>' +
         '<div class="report-column-head"><b>No Transaksi</b><b>Tanggal</b><b>Dept</b><b>Nama Sales</b><b>Nama Pelanggan</b><b>Alamat</b></div>' +
         '<div class="report-sales-list">' + (entries || '<p class="report-empty">Tidak ada transaksi pada filter ini.</p>') + '</div>' +
@@ -1155,7 +1303,7 @@
       var r = rows.filter(function (x) { return x.dataset.sku === sku; })[0];
       // Column order: 0=pick, 1=kode, 2=nama, 3=toko, 4=jenis, 5=stok, 6=satuan, 7=harga pokok, 8=harga jual, 9=margin
       var cell = function (i) { return r ? r.children[i].textContent.trim() : ''; };
-      var currentStoreID = r ? Number(r.dataset.storeId || '0') : 0;
+      var currentStoreID = r ? Number(r.dataset.storeId || '0') : (stores.length ? stores[0].ID : 0);
       var storeOpts = '<option value="">— Pilih Toko —</option>' +
         stores.map(function (s) {
           return '<option value="' + s.ID + '"' + (s.ID === currentStoreID ? ' selected' : '') + '>' + esc(s.Name) + '</option>';
@@ -1219,8 +1367,15 @@
       };
     }
 
-    $('#addItem').onclick = function () { form(null); };
-    $('#editItem').onclick = function () { if (selected) form(selected.dataset.sku); };
+    function ensureStores(cb) {
+      if (stores && stores.length) { cb(); return; }
+      api('/stores', 'GET').then(function (data) {
+        stores = Array.isArray(data) ? data : [];
+        cb();
+      }).catch(function () { cb(); });
+    }
+    $('#addItem').onclick = function () { ensureStores(function () { form(null); }); };
+    $('#editItem').onclick = function () { if (selected) ensureStores(function () { form(selected.dataset.sku); }); };
 
     $('#delItem').onclick = function () {
       if (!selected) return;
@@ -2046,10 +2201,72 @@
     var page = $('.transfer-page');
     if (!page) return;
     var direction = page.dataset.transferType;
+    var stores = [];
+    api('/stores', 'GET').then(function (data) {
+      stores = Array.isArray(data) ? data : [];
+      var fromSel = $('#fromStore');
+      var toSel = $('#toStore');
+      if (fromSel) {
+        stores.forEach(function (s) {
+          var opt = document.createElement('option');
+          opt.value = s.Name || s.name;
+          opt.textContent = s.Name || s.name;
+          fromSel.appendChild(opt);
+        });
+      }
+      if (toSel) {
+        stores.forEach(function (s) {
+          var opt = document.createElement('option');
+          opt.value = s.Name || s.name;
+          opt.textContent = s.Name || s.name;
+          toSel.appendChild(opt);
+        });
+      }
+    }).catch(function () {});
     var products = $$('#transferProductCatalog .transfer-product-option').map(function (el) {
-      return { id: Number(el.dataset.id) || 0, sku: el.dataset.sku, name: el.dataset.name, stock: Number(el.dataset.stock), unit: normalizeUnit(el.dataset.unit) };
+      return { id: Number(el.dataset.id) || 0, sku: el.dataset.sku, name: el.dataset.name, stock: Number(el.dataset.stock), storeStocks: [], unit: normalizeUnit(el.dataset.unit) };
     });
     var items = [];
+
+    // Sumber data item: API Daftar Item (/api/items), sama seperti menu Daftar Item.
+    function loadCatalogFromApi() {
+      return api('/api/items?limit=500', 'GET').then(function (result) {
+        var list = result && Array.isArray(result.data) ? result.data : [];
+        if (!list.length) return;
+        products = list.filter(function (p) { return p.is_active !== false; }).map(function (p) {
+          var storeStocks = Array.isArray(p.stock) ? p.stock : [];
+          var total = 0;
+          storeStocks.forEach(function (s) { total += Number(s.qty) || 0; });
+          return {
+            id: Number(p.id) || 0,
+            sku: p.code || '',
+            name: p.name || '',
+            stock: total,
+            storeStocks: storeStocks,
+            unit: normalizeUnit(p.unit)
+          };
+        });
+        var dl = $('#transferProductOptions');
+        if (dl) {
+          dl.innerHTML = products.map(function (p) {
+            return '<option value="' + esc(p.sku + ' — ' + p.name) + '"></option>';
+          }).join('');
+        }
+      }).catch(function () { /* pakai katalog hasil render server sebagai fallback */ });
+    }
+    loadCatalogFromApi();
+
+    // Stok mengikuti toko asal yang dipilih.
+    function stockFor(p) {
+      var from = ($('#fromStore') && $('#fromStore').value.trim()) || '';
+      if (from && p.storeStocks && p.storeStocks.length) {
+        var match = p.storeStocks.filter(function (s) {
+          return String(s.store_name || '').toLowerCase() === from.toLowerCase();
+        })[0];
+        if (match) return Number(match.qty) || 0;
+      }
+      return p.stock;
+    }
 
     function findProduct(value) {
       var v = String(value || '').trim().toLowerCase();
@@ -2074,7 +2291,7 @@
     $('#transferProduct').addEventListener('input', function () {
       var p = findProduct(this.value);
       $('#transferHint').textContent = p
-        ? p.name + ' · Stok saat ini ' + qtyText(p.stock, p.unit) + (direction === 'out' ? ' · Jumlah keluar maksimal sebesar stok.' : '')
+        ? p.name + ' · Stok saat ini ' + qtyText(stockFor(p), p.unit) + (direction === 'out' ? ' · Jumlah keluar maksimal sebesar stok.' : '')
         : 'Jumlah mengikuti satuan barang. Stok tersedia akan diperiksa sebelum transaksi disimpan.';
       if (p) {
         $('#transferQty').step = qtyStep(p.unit);
@@ -2082,7 +2299,13 @@
         $('#transferQtyLabel').textContent = 'Jumlah (' + unitName(p.unit) + ')';
       }
     });
-    $('#fromStore').addEventListener('change', render);
+    $('#fromStore').addEventListener('change', function () {
+      items.forEach(function (item) {
+        var p = products.filter(function (x) { return x.sku === item.sku; })[0];
+        if (p) item.stock = stockFor(p);
+      });
+      render();
+    });
     $('#toStore').addEventListener('change', render);
     $('#transferProduct').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); $('#transferAdd').click(); }
@@ -2092,13 +2315,14 @@
       if (!product) { toast('Pilih barang dari daftar yang tersedia.', 'warn'); $('#transferProduct').focus(); return; }
       var qty = normalizeQty(num($('#transferQty').value), product.unit);
       if (qty < qtyMinimum(product.unit)) { toast(product.unit === 'pcs' ? 'Jumlah minimum 1 pcs.' : 'Jumlah minimum 0,1 meter.', 'warn'); $('#transferQty').focus(); return; }
+      var available = stockFor(product);
       var existing = items.filter(function (item) { return item.sku === product.sku; })[0];
-      if (direction === 'out' && (existing ? existing.qty : 0) + qty > product.stock) {
-        toast('Stok ' + product.name + ' hanya ' + qtyText(product.stock, product.unit) + '.', 'warn');
+      if (direction === 'out' && (existing ? existing.qty : 0) + qty > available) {
+        toast('Stok ' + product.name + ' hanya ' + qtyText(available, product.unit) + '.', 'warn');
         return;
       }
       if (existing) existing.qty += qty;
-      else items.push({ sku: product.sku, name: product.name, stock: product.stock, qty: qty, unit: product.unit });
+      else items.push({ id: product.id, sku: product.sku, name: product.name, stock: available, qty: qty, unit: product.unit });
       $('#transferProduct').value = '';
       $('#transferQty').value = '1.0';
       $('#transferQty').step = '0.1';
@@ -2421,7 +2645,7 @@
       else if (page === 'suppliers') supplierBillsPage();
       else if (page === 'supplier-detail') supplierDetailPage();
       else if (page === 'opname') opnamePage();
-      else if (page === 'stock-in' || page === 'stock-out') stockTransferPage();
+      else if (page === 'stock-in' || page === 'stock-out' || page === 'stock-transfer') stockTransferPage();
       else if (page === 'datasheet') datasheetPage();
       else if (page === 'admin-users') adminUsersPage();
       else if (page === 'salespeople') salespeoplePage();

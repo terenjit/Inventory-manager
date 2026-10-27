@@ -123,6 +123,7 @@ func (s *service) UpsertByCode(ctx context.Context, actor auth.Actor, input Crea
 			Name:       &input.Name,
 			CategoryID: input.CategoryID,
 			SupplierID: input.SupplierID,
+			StoreID:    input.StoreID,
 			IsActive:   &active,
 		}
 		if input.Unit != "" {

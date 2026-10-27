@@ -66,8 +66,7 @@
       </button>
       <ul>
         <li><a href="/stock-opname" class="{{if eq .Page "opname"}}is-active{{end}}">Stock Opname</a></li>
-        <li><a href="/barang-masuk" class="{{if eq .Page "stock-in"}}is-active{{end}}">Barang Masuk</a></li>
-        <li><a href="/barang-keluar" class="{{if eq .Page "stock-out"}}is-active{{end}}">Barang Keluar</a></li>
+        <li><a href="/barang-transfer?type=in" class="{{if eq .Page "stock-transfer"}}is-active{{end}}">Barang Masuk/Keluar</a></li>
       </ul>
     </div>
 
@@ -157,7 +156,7 @@
       {{else if eq .Page "admin-users"}}{{template "admin-users" .}}
       {{else if eq .Page "datasheet"}}{{template "datasheet" .}}
       {{else if eq .Page "opname"}}{{template "opname" .}}
-      {{else if or (eq .Page "stock-in") (eq .Page "stock-out")}}{{template "stock-transfer" .}}
+      {{else if or (eq .Page "stock-in") (eq .Page "stock-out") (eq .Page "stock-transfer")}}{{template "stock-transfer" .}}
       {{else}}{{template "dashboard" .}}{{end}}
     </div>
 

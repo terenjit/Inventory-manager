@@ -30,8 +30,8 @@ func main() {
 
 	// Seed stores
 	seeds := []store.Store{
-		{Code: "TU", Name: "Toko Utama"},
-		{Code: "TC", Name: "Toko Cabang"},
+		{Code: "SWT", Name: "Sumbawa Textile"},
+		{Code: "STT", Name: "Sumbawa Textile Taliwang"},
 	}
 	for _, s := range seeds {
 		id, err := storeRepo.Create(ctx, &s)

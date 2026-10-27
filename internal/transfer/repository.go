@@ -19,6 +19,7 @@ type Repository interface {
 	Create(ctx context.Context, tx *sqlx.Tx, t *Transfer, items []*TransferItem) (uint, error)
 	GetByID(ctx context.Context, id uint) (*Transfer, error)
 	GetItems(ctx context.Context, transferID uint) ([]*TransferItem, error)
+	GetItemsByTransferIDs(ctx context.Context, transferIDs []uint) (map[uint][]*TransferItem, error)
 	List(ctx context.Context, f ListFilter) ([]*Transfer, int, error)
 	UpdateStatus(ctx context.Context, tx *sqlx.Tx, id uint, newStatus string, byUser uint) error
 }
@@ -110,6 +111,34 @@ func (r *sqlxRepo) GetItems(ctx context.Context, transferID uint) ([]*TransferIt
 		return nil, apperr.Internal(err)
 	}
 	return items, nil
+}
+
+// GetItemsByTransferIDs loads items for many transfers in one query.
+func (r *sqlxRepo) GetItemsByTransferIDs(ctx context.Context, transferIDs []uint) (map[uint][]*TransferItem, error) {
+	out := make(map[uint][]*TransferItem, len(transferIDs))
+	if len(transferIDs) == 0 {
+		return out, nil
+	}
+	query, args, err := sqlx.In(
+		`SELECT ti.transfer_id, ti.product_id, ti.qty,
+		        p.code AS product_code, p.name AS product_name, p.unit
+		   FROM stock_transfer_items ti
+		   JOIN products p ON p.id = ti.product_id
+		  WHERE ti.transfer_id IN (?)
+		  ORDER BY p.name`, transferIDs,
+	)
+	if err != nil {
+		return nil, apperr.Internal(err)
+	}
+	query = r.db.Rebind(query)
+	var items []*TransferItem
+	if err := r.db.SelectContext(ctx, &items, query, args...); err != nil {
+		return nil, apperr.Internal(err)
+	}
+	for _, it := range items {
+		out[it.TransferID] = append(out[it.TransferID], it)
+	}
+	return out, nil
 }
 
 func (r *sqlxRepo) List(ctx context.Context, f ListFilter) ([]*Transfer, int, error) {

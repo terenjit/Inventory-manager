@@ -1,0 +1,14 @@
+.git
+.github
+bin/
+dist/
+*.log
+.env
+.env.local
+.DS_Store
+CLAUDE.md
+PLAN.md
+README.md
+docker-compose.yml
+node_modules/
+vendor/

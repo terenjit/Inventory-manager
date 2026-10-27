@@ -403,7 +403,7 @@ func compatSaveItem(svc product.Service, categorySvc category.Service, storeRepo
 
 		// Seed initial stock for new products when stock > 0.
 		if isNew && body.Stock > 0 {
-			seedInitialStock(ctx, actor, resp, body.Stock, storeRepo, stockWriter)
+			seedInitialStock(ctx, actor, resp, body.Stock, body.StoreID, storeRepo, stockWriter)
 			// Re-fetch so the response includes the seeded stock.
 			var productID uint
 			switch v := resp.(type) {
@@ -446,7 +446,7 @@ func findOrCreateCategory(ctx context.Context, actor auth.Actor, svc category.Se
 // seedInitialStock writes an adjustment movement for a newly created product.
 // For admin actors: uses the first active store.
 // For cashier actors: uses their own store.
-func seedInitialStock(ctx context.Context, actor auth.Actor, resp interface{}, qty float64, storeRepo store.Repository, stockWriter *stock.Writer) {
+func seedInitialStock(ctx context.Context, actor auth.Actor, resp interface{}, qty float64, preferredStoreID *uint, storeRepo store.Repository, stockWriter *stock.Writer) {
 	// Extract numeric product ID from the upsert response.
 	type hasID interface{ GetID() uint }
 	var productID uint
@@ -463,6 +463,8 @@ func seedInitialStock(ctx context.Context, actor auth.Actor, resp interface{}, q
 	var storeID uint
 	if actor.StoreID != nil {
 		storeID = *actor.StoreID
+	} else if preferredStoreID != nil && *preferredStoreID > 0 {
+		storeID = *preferredStoreID
 	} else {
 		// Admin: seed the first active store.
 		stores, err := storeRepo.List(ctx)

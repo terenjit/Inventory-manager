@@ -3,6 +3,10 @@
   <section class="card transfer-form no-print">
     <div class="transfer-heading">
       <div>
+        <div class="tabs" style="display:flex;gap:8px;margin-bottom:12px;">
+          <a class="btn {{if eq .TransferType "in"}}btn-primary{{else}}btn-ghost{{end}}" href="/barang-transfer?type=in">Barang Masuk</a>
+          <a class="btn {{if eq .TransferType "out"}}btn-primary{{else}}btn-ghost{{end}}" href="/barang-transfer?type=out">Barang Keluar</a>
+        </div>
         <small class="eyebrow">PERPINDAHAN STOK ANTAR TOKO</small>
         <h2>{{if eq .TransferType "in"}}Barang Masuk{{else}}Barang Keluar{{end}}</h2>
         <p>{{if eq .TransferType "in"}}Catat barang yang diterima dari toko lain. Stok toko ini akan bertambah.{{else}}Catat barang yang dikirim ke toko lain. Stok toko ini akan berkurang.{{end}}</p>
@@ -15,16 +19,12 @@
         <span>{{if eq .TransferType "in"}}Diterima dari toko{{else}}Dikirim dari toko{{end}}</span>
         <select id="fromStore" required>
           <option value="">Pilih toko</option>
-          <option>Toko A</option>
-          <option>Toko B</option>
         </select>
       </label>
       <label class="field">
         <span>{{if eq .TransferType "in"}}Diterima di{{else}}Diterima di toko tujuan{{end}}</span>
         <select id="toStore" required>
           <option value="">Pilih toko</option>
-          <option>Toko A</option>
-          <option>Toko B</option>
         </select>
       </label>
       <label class="field transfer-note">

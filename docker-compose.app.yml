@@ -1,0 +1,53 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: textile_pos
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    image: migrate/migrate:latest
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations:ro
+    command: ["-path", "/migrations", "-database", "mysql://root:secret@tcp(mysql:3306)/textile_pos", "up"]
+    restart: "no"
+
+  seed:
+    image: textile-pos:latest
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DB_DSN: root:secret@tcp(mysql:3306)/textile_pos?parseTime=true&charset=utf8mb4
+      SEED_ADMIN_PASSWORD: admin123
+    working_dir: /app
+    command: ["./bin/seed"]
+    restart: "no"
+
+  app:
+    image: textile-pos:latest
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    environment:
+      DB_DSN: root:secret@tcp(mysql:3306)/textile_pos?parseTime=true&charset=utf8mb4
+      JWT_SECRET: change-me-to-a-long-random-string
+      APP_PORT: 8080
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
